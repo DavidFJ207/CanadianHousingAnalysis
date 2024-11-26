@@ -1,0 +1,9 @@
+{
+    "sortOrder": [
+        {
+            "columnIndex": 2,
+            "ascending": false
+        }
+    ],
+    "path": "~/CanadianHousingAnalysis/data/01-raw_data"
+}

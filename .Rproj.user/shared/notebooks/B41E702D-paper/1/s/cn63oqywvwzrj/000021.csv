@@ -1,0 +1,10 @@
+"0",""
+"0","# Display the R-squared value"
+"0","cat(""\n### Model Performance\n"")"
+"1","
+### Model Performance
+"
+"0","cat(sprintf(""The R-squared value of the model is %.4f, indicating that %.2f%% of the variation in NHPI is explained by the predictors.\n"", "
+"0","            r_squared, r_squared * 100))"
+"1","The R-squared value of the model is 0.9576, indicating that 95.76% of the variation in NHPI is explained by the predictors.
+"

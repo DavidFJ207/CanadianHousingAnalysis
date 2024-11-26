@@ -1,0 +1,8 @@
+~%2FCanadianHousingAnalysis%2FREADME.md="DDAE81FB"
+~%2FCanadianHousingAnalysis%2Fpaper%2Fpaper.qmd="4D3CBAF1"
+~%2FCanadianHousingAnalysis%2Fscripts%2F00-simulate_data.R="BA2D2ABD"
+~%2FCanadianHousingAnalysis%2Fscripts%2F02-download_data.R="0CCCE85F"
+~%2FCanadianHousingAnalysis%2Fscripts%2F03-clean_data.R="83C2188D"
+~%2FCanadianHousingAnalysis%2Fscripts%2F05-exploratory_data_analysis.R="F6A756CD"
+~%2FCanadianHousingAnalysis%2Fscripts%2F06-model_data.R="07AF62A1"
+~%2FCanadianHousingAnalysis%2Fscripts%2F07-replications.R="0BC41BE0"
