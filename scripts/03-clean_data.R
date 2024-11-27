@@ -1,16 +1,19 @@
 #### Preamble ####
-# Purpose: Cleans the raw plane data recorded by two observers..... [...UPDATE THIS...]
-# Author: Rohan Alexander [...UPDATE THIS...]
-# Date: 6 April 2023 [...UPDATE THIS...]
-# Contact: rohan.alexander@utoronto.ca [...UPDATE THIS...]
+# Purpose: Cleans and merges raw housing market data from various sources, including house prices, GDP, CPI, interest rates, housing construction, and absorption rates, for analysis of the Canadian housing market.
+# Author: Gadiel David Flores Jimenez
+# Date: 26 November 2024
+# Contact: davidgadiel.flores@mail.utoronto.ca
 # License: MIT
-# Pre-requisites: [...UPDATE THIS...]
-# Any other information needed? [...UPDATE THIS...]
+# Pre-requisites: Ensure all raw data files are correctly formatted and located in the "data/01-raw_data" directory under the respective subfolders ("housing", "rate", "gdp", "cpi", "construction", "absorption"). 
+# Ensure the `here` and `tidyverse` packages are installed and loaded in the environment.
+# Any other information needed? Dates must match the specified `dates` vector for proper filtering. Ensure all datasets have a column named `REF_DATE` and a column containing the values to be used in the final analysis.
+
 
 #### Workspace setup ####
 library(tidyverse)
 library(here)
 library(dplyr)
+library(arrow)
 
 #### Clean data ####
 raw_house_price_data <- read_csv(here::here("data", "01-raw_data", "housing", "housing_price.csv"))
@@ -98,4 +101,4 @@ merged_df <- raw_house_price_data %>%
 
 
 #### Save data ####
-write_csv(merged_df, here::here("data","02-analysis_data","analysis_data.csv"))
+write_parquet(merged_df, here::here("data", "02-analysis_data", "analysis_data.parquet"))

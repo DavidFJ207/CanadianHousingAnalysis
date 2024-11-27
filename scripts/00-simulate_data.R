@@ -11,6 +11,7 @@
 
 #### Workspace setup ####
 library(tidyverse)
+library(arrow)
 set.seed(853)
 
 #### Simulate data ####
@@ -42,5 +43,6 @@ analysis_data <- tibble(
 )
 
 #### Save data ####
-write_csv(analysis_data, "data/00-simulated_data/simulated_data.csv")
+write_parquet(analysis_data, "data/00-simulated_data/simulated_data.parquet")
+
 

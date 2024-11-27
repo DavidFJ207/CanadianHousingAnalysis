@@ -21,7 +21,7 @@ library(car)
 
 ### **Step 1: Data Preparation and Exploration** ###
 # Read and prepare the data
-analysis_data <- read_csv(here::here("data", "02-analysis_data", "analysis_data.csv"))
+analysis_data <- arrow::read_parquet(here::here("data", "02-analysis_data", "analysis_data.parquet"))
 
 # Split data into training (80%) and testing (20%) datasets
 set.seed(123)

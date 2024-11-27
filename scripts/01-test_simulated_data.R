@@ -1,9 +1,9 @@
 #### Preamble ####
 # Purpose: Tests the structure and validity of the simulated Australian 
   #electoral divisions dataset.
-# Author: Rohan Alexander
-# Date: 26 September 2024
-# Contact: rohan.alexander@utoronto.ca
+# Author: Gadiel David Flores Jimenez
+# Date: 26 November 2024
+# Contact: davidgadiel.flores@mail.utoronto.ca
 # License: MIT
 # Pre-requisites: 
   # - The `tidyverse` package must be installed and loaded
@@ -13,8 +13,9 @@
 
 #### Workspace setup ####
 library(tidyverse)
+library(arrow)
+analysis_data <- read_parquet("data/00-simulated_data/simulated_data.parquet")
 
-analysis_data <- read_csv("data/00-simulated_data/simulated_data.csv")
 
 # Test if the data was successfully loaded
 if (exists("analysis_data")) {
@@ -23,48 +24,41 @@ if (exists("analysis_data")) {
   stop("Test Failed: The dataset could not be loaded.")
 }
 
-
 #### Test data ####
 
 # Check if the dataset has 151 rows
-if (nrow(analysis_data) == 151) {
+if (nrow(analysis_data) == 1000) {
   message("Test Passed: The dataset has 151 rows.")
 } else {
   stop("Test Failed: The dataset does not have 151 rows.")
 }
 
-# Check if the dataset has 3 columns
-if (ncol(analysis_data) == 3) {
-  message("Test Passed: The dataset has 3 columns.")
+# Check if the dataset has 6 columns
+if (ncol(analysis_data) == 6) {
+  message("Test Passed: The dataset has 6 columns.")
 } else {
-  stop("Test Failed: The dataset does not have 3 columns.")
+  stop("Test Failed: The dataset does not have 6 columns.")
 }
 
-# Check if all values in the 'division' column are unique
-if (n_distinct(analysis_data$division) == nrow(analysis_data)) {
-  message("Test Passed: All values in 'division' are unique.")
+# Check if all values in the 'house_price' column are unique
+if (n_distinct(analysis_data$house_price) == nrow(analysis_data)) {
+  message("Test Passed: All values in 'house_price' are unique.")
 } else {
-  stop("Test Failed: The 'division' column contains duplicate values.")
+  stop("Test Failed: The 'house_price' column contains duplicate values.")
 }
 
-# Check if the 'state' column contains only valid Australian state names
-valid_states <- c("New South Wales", "Victoria", "Queensland", "South Australia", 
-                  "Western Australia", "Tasmania", "Northern Territory", 
-                  "Australian Capital Territory")
-
-if (all(analysis_data$state %in% valid_states)) {
-  message("Test Passed: The 'state' column contains only valid Australian state names.")
+# Check if the 'construction' column contains only valid numeric values
+if (all(is.numeric(analysis_data$construction))) {
+  message("Test Passed: The 'construction' column contains only numeric values.")
 } else {
-  stop("Test Failed: The 'state' column contains invalid state names.")
+  stop("Test Failed: The 'construction' column contains invalid values.")
 }
 
-# Check if the 'party' column contains only valid party names
-valid_parties <- c("Labor", "Liberal", "Greens", "National", "Other")
-
-if (all(analysis_data$party %in% valid_parties)) {
-  message("Test Passed: The 'party' column contains only valid party names.")
+# Check if the 'absorption' column contains only positive values
+if (all(analysis_data$absorption > 0)) {
+  message("Test Passed: The 'absorption' column contains only positive values.")
 } else {
-  stop("Test Failed: The 'party' column contains invalid party names.")
+  stop("Test Failed: The 'absorption' column contains non-positive values.")
 }
 
 # Check if there are any missing values in the dataset
@@ -74,16 +68,23 @@ if (all(!is.na(analysis_data))) {
   stop("Test Failed: The dataset contains missing values.")
 }
 
-# Check if there are no empty strings in 'division', 'state', and 'party' columns
-if (all(analysis_data$division != "" & analysis_data$state != "" & analysis_data$party != "")) {
-  message("Test Passed: There are no empty strings in 'division', 'state', or 'party'.")
+# Check if there are no empty strings in 'house_price', 'construction', and 'gdp' columns
+if (all(analysis_data$house_price != "" & analysis_data$construction != "" & analysis_data$gdp != "")) {
+  message("Test Passed: There are no empty strings in 'house_price', 'construction', or 'gdp'.")
 } else {
   stop("Test Failed: There are empty strings in one or more columns.")
 }
 
-# Check if the 'party' column has at least two unique values
-if (n_distinct(analysis_data$party) >= 2) {
-  message("Test Passed: The 'party' column contains at least two unique values.")
+# Check if the 'rate' column contains at least two unique values
+if (n_distinct(analysis_data$rate) >= 2) {
+  message("Test Passed: The 'rate' column contains at least two unique values.")
 } else {
-  stop("Test Failed: The 'party' column contains less than two unique values.")
+  stop("Test Failed: The 'rate' column contains less than two unique values.")
+}
+
+# Check if the 'cpi' column contains only valid numeric values
+if (all(is.numeric(analysis_data$cpi))) {
+  message("Test Passed: The 'cpi' column contains only numeric values.")
+} else {
+  stop("Test Failed: The 'cpi' column contains invalid values.")
 }

@@ -24,7 +24,7 @@ library(corrplot)
 library(car)
 
 #### Read data ####
-analysis_data <- read_csv(here::here("data", "02-analysis_data", "analysis_data.csv"))
+analysis_data <- read_parquet(here::here("data", "02-analysis_data", "analysis_data.parquet"))
 
 ### Model data ####
 response <- "house_price"

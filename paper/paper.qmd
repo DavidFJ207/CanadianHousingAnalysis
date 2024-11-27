@@ -26,8 +26,8 @@ library(bayesplot)
 library(tidyr)
 
 
-analysis_data <- read_csv(here::here("data/02-analysis_data/analysis_data.csv"))
-sim_data <- read_csv(here::here("data/00-simulated_data/simulated_data.csv"))
+analysis_data <- arrow::read_parquet(here::here("data", "02-analysis_data", "analysis_data.parquet"))
+sim_data <- arrow::read_parquet(here::here("data", "00-simulated_data", "simulated_data.parquet"))
 ```
 # Introduction
 ## Overview
@@ -39,22 +39,23 @@ The estimand of this analysis is the relationship between the new housing price 
 
 The remainder of this paper is structured as follows....
 
+\newpage 
+
 # Data {#sec-data}
-
 ## Overview
-
-We use the statistical programming language R [@citeR] to analyze housing prices in Toronto. The data for this project was sourced from Statistics Canada, including five datasets [@statscan2024]. These datasets provided information on the new housing price index, housing absorption, GDP, CPI, interest rates, and construction statistics. The data spans from 1997 to 2016 and is divided quarterly, yielding 76 entries.
+We use the statistical programming language R [@citeR] to analyze housing prices in Toronto. The data for this project was sourced from Statistics Canada @StatCan, including five datasets. These datasets provided information on the new housing price index, housing absorption, GDP, CPI, interest rates, and construction statistics. The data spans from 1997 to 2016 and is divided quarterly, yielding 76 entries.
 
 ## Measurement
 
-## Outcome Variable: New Housing Price Index
-
-The New Housing Price Index (NHPI) tracks the prices of newly built homes in Canada. It measures whether they're increasing or decreasing. This index helps us understand the factors driving housing costs, such as economic trends, interest rates, and construction costs. By analyzing this data, policymakers, builders, and potential homebuyers can make informed decisions about the housing market.
-
+### Outcome Variable: New Housing Price Index
+The New Housing Price Index (NHPI) data, provided by Statistics Canada (@StatCan-NewHousingPriceIndex), is a way to measure how the prices of newly built houses in Canada change over time. It tracks the prices of new homes, like single-family houses and townhomes, while making sure that comparisons are fair by keeping the house features the same. This helps people understand if housing is becoming more expensive or affordable and why, considering factors like construction costs and market demand. It’s used by everyone from economists and policymakers to builders and homebuyers to make informed decisions about the housing market.
 ```{r}
 #| label: fig-new-housing-price
-#| fig-cap: New Housing Price Index Over Time
+#| fig-cap: New Housing Price Index Trends
 #| echo: false
+#| eval: true
+#| warning: false
+#| message: false
 
 # Convert REF_DATE to a valid date format
 analysis_data <- analysis_data |> 
@@ -69,180 +70,193 @@ semiannual_data <- analysis_data |>
   group_by(SixMonthPeriod) |> 
   summarize(mean_house_price = mean(house_price, na.rm = TRUE))
 
-# View the summarized data
-head(semiannual_data)
-
-# Plot data by 6-month periods
+# Plot data by 6-month periods with points
 semiannual_data |> 
   ggplot(aes(x = SixMonthPeriod, y = mean_house_price)) +
-  geom_line(color = "darkgreen", size = 0.5) +
+  geom_line(color = "darkgreen", linewidth = 0.5) +  # Use `linewidth` instead of `size`
+  geom_point(color = "black", size = 1.5) +  # Add points at each data point
   theme_minimal() +
   labs(x = "Year",
-       y = "Housing Price Index",
-       title = "Trends in New Housing Price Index")
+       y = "Housing Price Index")
+
 ```
 
-The plot above illustrates the changes in the new housing price index across the analyzed period.
+The graph labeled @fig-new-housing-price reveals a steady upward trend in housing prices in Canada over time, with a notable rapid increase from 2005 to 2008, stabilization around 2008-2010, and consistent growth post-2010.  
 
-## Predictor Variables
+### Predictor Variables  
 
-We included five main predictor variables based on our research question: 
-
-### 1. Housing Availability
-**Number of Completed Homes:** Includes all new homes at a given time.
-
+#### Housing Availability  
+The dataset from the Canada Mortgage and Housing Corporation (CMHC) provides detailed information about new homes in Canada, including the number of houses being built, completed, or under construction (@StatCan-HousingStarts). It also includes data on newly built but unoccupied homes, vacancy rates, and mortgage details.  
 ```{r}
 #| label: fig-available-homes
-#| fig-cap: Distribution of Available Homes by Six-Month Period
+#| fig-cap: Availability of Homes Over Time
 #| echo: false
+#| eval: true
+#| warning: false
+#| message: false
 
 analysis_data |> 
   ggplot(aes(x = SixMonthPeriod, y = construction)) +
   geom_col(fill = "darkgreen", alpha = 0.8) +
   theme_minimal() +
-  labs(x = "Six-Month Period",
-       y = "Number of Available Homes",
-       title = "Availability of Homes Over Time (Every 6 Months)")
+  labs(x = "Year",
+       y = "Number of New Built Homes")
+```  
+The bar chart shows the number of available homes in Canada over six-month periods, highlighting fluctuations in housing construction activity. There is a noticeable peak in the mid-2000s, followed by a slight decline and stabilization in the availability of homes from 2010 onward, reflecting trends in construction and housing demand.
 
-```
+#### Housing Sales  
 
-### 2. Housing Sales
-**Number of Homes Sold:** Represents sales volume for homes.
+The Canada Mortgage and Housing Corporation (CMHC) maintains an extensive database with over 14,000 housing series, offering monthly data on housing unoccupied newly built homes, vacancy rates, and mortgage details. These statistics, accessible via CANSIM, provide valuable insights into residential availability and market dynamics. This data is provided under @StatCan-HousingAbsorptions.  
 ```{r}
 #| label: fig-sold-homes
-#| fig-cap: Distribution of sold Homes by Six-Month Period
+#| fig-cap: Sold Homes Over Time
 #| echo: false
-
+#| eval: true
+#| warning: false
+#| message: false
 
 analysis_data |> 
   ggplot(aes(x = SixMonthPeriod, y = absorption)) +
   geom_col(fill = "darkgreen", alpha = 0.8) +
   theme_minimal() +
-  labs(x = "Six-Month Period",
-       y = "Number of Sold Homes",
-       title = "Sold of Homes Over Time (Every 6 Months)")
+  labs(x = "Year",
+       y = "Number of Sold Homes")
+```  
+@fig-sold-homes illustrates the number of sold homes over time in six-month intervals, showing a peak in home sales around the early 2000s, particularly between 2000 and 2005. After this period, there is a gradual decline in the number of sold homes, with noticeable fluctuations, stabilizing at lower levels post-2010.  
 
-```
-### 3. Gross Domestic Proudct
-
+#### Gross Domestic Proudct
+Gross Domestic Product (GDP) measures the total value of all goods and services produced within Canada's borders, providing a snapshot of the country's economic activity. The term "gross" includes costs like depreciation of capital assets, while "domestic" focuses on activities within Canada. GDP data is categorized by industry, offering insight into how various sectors contribute to economic performance. This information, provided by Statistics Canada (@StatCan-GDP), is crucial for understanding economic trends, planning policies, and evaluating industrial performance on a monthly basis.  
 ```{r}
 #| label: fig-gdp
 #| fig-cap: Gross Domestic Product
 #| echo: false
+#| eval: true
+#| warning: false
+#| message: false
 
 analysis_data |> 
   ggplot(aes(x = SixMonthPeriod, y = gdp)) +
   geom_col(fill = "darkgreen", alpha = 0.8) +
   theme_minimal() +
-  labs(x = "Six-Month Period",
-       y = "gdp",
-       title = "GDP")
-
+  labs(x = "Year",
+       y = "GDP")
 ```
 
-### 4. Interest Rates
-Interest rate hikes were categorized by comparing rates between successive entries.
+@fig-gdp shows a steady increase in Gross Domestic Product (GDP) over time, reflecting consistent economic growth. The upward trend suggests a strengthening economy, with noticeable stability and gradual increments throughout the observed years.  
 
-```{r fig-interest-rate}
+#### Interest Rates
+Bank interest rates represent the cost of borrowing money or the reward for saving it, as set by financial institutions and influenced by the Bank of Canada. These rates play a critical role in financial markets and the economy by affecting loans, mortgages, and savings, helping regulate economic activity. Data on interest rates, financial institutions, and market activities are compiled by the Bank of Canada and detailed in (@StatCan-FinancialMarketStats).
+```{r}
 #| label: fig-interest-rate
 #| fig-cap: Interest Rate Trends and Hikes
 #| echo: false
+#| eval: true
+#| warning: false
+#| message: false
 
 analysis_data |> 
   ggplot(aes(x = SixMonthPeriod, y = rate)) +
   geom_col(fill = "darkgreen", alpha = 0.8) +
   theme_minimal() +
-  labs(x = "Six-Month Period",
-       y = "rate",
-       title = "Bank Interest Rates ")
+  labs(x = "Year",
+       y = "Rate")
 ```
-### 5. Consumer Price Index (CPI)
-Interest rate hikes were categorized by comparing rates between successive entries.
 
+@fig-interest-rate shows fluctuations in bank interest rates over time, with a peak around the early 2000s, followed by a significant decline after 2008. The rates remained relatively low and stable in the years following the financial crisis.
+
+#### Consumer Price Index (CPI)  
+
+The Consumer Price Index (CPI) measures changes in the cost of a fixed basket of goods and services purchased by Canadian households, allowing Canadians to track inflation and its impact on purchasing power. It reflects price changes over time while keeping the quality and quantity of items in the basket consistent, ensuring that only "pure" price changes are measured. The CPI is widely used to adjust payments like wages and pensions, evaluate economic trends, and monitor the effects of inflation on financial stability. For further details, see Statistics Canada @StatCan-CPI.
 ```{r}
 #| label: fig-cpi
 #| fig-cap: CPI
 #| echo: false
+#| eval: true
+#| warning: false
+#| message: false
 
 analysis_data |> 
   ggplot(aes(x = SixMonthPeriod, y = cpi)) +
   geom_col(fill = "darkgreen", alpha = 0.8) +
   theme_minimal() +
-  labs(x = "Six-Month Period",
-       y = "cpi",
-       title = "CPI")
+  labs(x = "Year",
+       y = "CPI")
 ```
-## Summary
 
-The data has been prepared for analysis through cleaning, transformation, and visualization. Each variable has been integrated into a cohesive dataset that will allow us to investigate how supply, demand, and economic factors impact housing prices in Canada.
+@fig-cpi shows a steady upward trend in the Consumer Price Index (CPI) over time, indicating a consistent increase in the overall prices of goods and services in Canada. This reflects gradual inflation and changes in the cost of living from the late 1990s to 2016.  
 
+## Summary  
 
+The data has been prepared for analysis through cleaning, transformation, and visualization. Each variable has been integrated into a cohesive dataset that will allow us to investigate how supply, demand, and economic factors impact housing prices in Canada.    
+  
+\newpage   
 # Model
+## Goal of the Model
+We want to analyze house prices based on economic factors like interest rates, GDP, and absorption (a measure of market activity). To do this, we created a model that looks at the relationships between these factors and house prices, ensuring it's both accurate and easy to interpret.
 
-#### **Goal of the Model**  
-We want to predict house prices based on economic factors like interest rates, GDP, and absorption (a measure of market activity). To do this, we created a mathematical model that looks at the relationships between these factors and house prices, ensuring it's both accurate and easy to interpret.
+### Exploration and Refinement
 
-### **Exploration and Refinement**
-
-1. **Exploring the Data**:  
+1. Exploring the Data:  
    We looked at the relationships between each factor and house prices using scatterplots. For example:
-   - **Interest Rate**: A clear negative relationship—higher rates are linked to lower house prices.
-   - **GDP and CPI**: Both show strong positive relationships with house prices.
-   - **Absorption**: Also negatively linked to house prices, but with more variability.  
+   - Interest Rate: A clear negative relationship—higher rates are linked to lower house prices.
+   - GDP and CPI: Both show strong positive relationships with house prices.
+   - Absorption: Also negatively linked to house prices, but with more variability.  
 
-   To ensure these factors don’t overlap too much in their information (a problem called "multicollinearity"), we used a tool called the **Variance Inflation Factor (VIF)**. This told us that GDP and CPI were too similar to both be useful, so we removed CPI to simplify the model.
+   To ensure these factors don’t overlap too much in their information (a problem called "multicollinearity"), we used a tool called the Variance Inflation Factor (VIF). This told us that GDP and CPI were too similar to both be useful, so we removed CPI to simplify the model.
 
-2. **Checking Assumptions**:  
+2. Checking Assumptions:  
 For our model to work well, it needs to satisfy certain assumptions:
-   - **Linearity**: The relationships between factors and house prices should follow straight lines.
-   - **Consistent Variance**: The errors in our predictions (residuals) should spread out evenly.
-   - **Normal Distribution**: The residuals should follow a bell-shaped curve.
+   - Linearity: The relationships between factors and house prices should follow straight lines.
+   - Consistent Variance: The errors in our predictions (residuals) should spread out evenly.
+   - Normal Distribution: The residuals should follow a bell-shaped curve.
 
 We checked these assumptions using plots:
-   - **Residuals vs. Fitted**: Showed some patterns, suggesting the need for possible tweaks.
-   - **Scale-Location Plot**: Slight inconsistencies in error spread, indicating minor heteroscedasticity (unequal spread of errors).
-   - **Normal Q-Q Plot**: Mostly aligned with expectations, except for a few extreme points (outliers).
+   - Residuals vs. Fitted: Showed some patterns, suggesting the need for possible tweaks.
+   - Scale-Location Plot: Slight inconsistencies in error spread, indicating minor heteroscedasticity (unequal spread of errors).
+   - Normal Q-Q Plot: Mostly aligned with expectations, except for a few extreme points (outliers).
 
-3. **Refining the Model**:  
+3. Refining the Model:  
 We used step-by-step selection to find the most important factors. The final model kept:
-   - **Interest Rate**: Lower rates are linked to higher house prices.
-   - **GDP**: A major positive influence.
-   - **Absorption**: Significant but negatively linked, meaning more market activity tends to reduce prices.  
+   - Interest Rate: Lower rates are linked to higher house prices.
+   - GDP: A major positive influence.
+   - Absorption: Significant but negatively linked, meaning more market activity tends to reduce prices.  
 
-We removed **construction** because it wasn’t contributing much.
+We removed construction because it wasn’t contributing much.
 
 
-### **Final Model Performance**
+### Final Model Performance
 
-1. **Key Insights**:
-   - The model explains **95.4%** of the variation in house prices, showing it’s highly accurate.
+1. Key Insights:
+   - The model explains 95.4% of the variation in house prices, showing it’s highly accurate.
    - It performs well on both the training and test data, proving it’s reliable for predicting unseen scenarios.
 
-2. **Metrics**:
-   - **RMSE** (typical error): 3.61
-   - **MAE** (average error): 3.07
-   - **R²** (accuracy): 95.76%  
+2. Metrics:
+   - RMSE (typical error): 3.61
+   - MAE (average error): 3.07
+   - \( R^2 \) (accuracy): 95.76%
 
+\newpage  
 
 # Results
 
 Our results are summarized in @tbl-modelresults.
 
 ```{r}
+#| label: tbl-modelresults
+#| tbl-cap: Summary of NHPI Model Results
 #| echo: false
 #| eval: true
 #| warning: false
 #| message: false
 
+# Load necessary library
+library(knitr)
+library(kableExtra)
+
 # Data summarizing the results
 results_table <- data.frame(
   Factor = c("Bank Interest Rate", "GDP", "Housing Absorption"),
-  Effect_on_NHPI = c("-0.62 per 1% increase", "+0.0000778 per unit increase", "-0.00603 per unit increase"),
-  Interpretation = c(
-    "Higher interest rates make mortgages more expensive, reducing demand and lowering NHPI.",
-    "Economic growth slightly increases NHPI as higher incomes boost housing demand.",
-    "Higher absorption suggests competitive pricing or increased supply, leading to slight NHPI decreases."
-  )
+  Effect_on_NHPI = c("-0.62 per unit increase", "+0.0000778 per unit increase", "-0.00603 per unit increase")
 )
 
 # Model performance
@@ -250,14 +264,7 @@ r_squared <- 0.9576
 
 # Create the table
 kable(results_table, caption = "Summary of NHPI Model Results") %>%
-  kable_styling(bootstrap_options = c("striped", "hover"))
-
-# Display the R-squared value
-cat("\n### Model Performance\n")
-cat(sprintf("The R-squared value of the model is %.4f, indicating that %.2f%% of the variation in NHPI is explained by the predictors.\n", 
-            r_squared, r_squared * 100))
-
-
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
 ```
 
 Our analysis reveals key insights into how economic factors influence the New Housing Price Index (NHPI). A 1% increase in bank interest rates leads to a 0.62-point decrease in the NHPI, highlighting the significant role of borrowing costs in shaping housing affordability. Higher interest rates make mortgages more expensive, reducing demand for new homes as fewer buyers can afford them. Consequently, builders may lower prices to attract buyers, which is reflected in the NHPI. This finding underscores the strong connection between interest rates and housing market dynamics.
@@ -411,11 +418,6 @@ The simulation was designed to generate an idealized dataset representing potent
 
 ### 7. Conclusion
 This Appendix emphasizes the strengths and limitations of the NHPI and related economic indicators in analyzing housing trends. While the NHPI provides a reliable measure of urban housing markets, its exclusion of rural areas and custom-built homes limits its representativeness at the national level. Simulations revealed greater variability in an idealized dataset, suggesting that observed data may underrepresent broader economic conditions and housing trends. These insights underscore the importance of cautious interpretation when drawing conclusions from urban-focused datasets and highlight the value of incorporating additional data sources to improve representativeness and robustness in housing market analysis.
-
-
-# Model details {#sec-model-details}
-
-\newpage
 
 
 # References
