@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-# CanadianHousingAnalysis
-Analysis of Canada's housing market using linear regression to examine the impact of supply, demand, and economic factors on housing prices.
-=======
 # Housing Price Analysis
 
 ## Overview
@@ -33,4 +29,3 @@ The repository is organized as follows:
 ## Statement on LLM Usage
 
 Aspects of this project, including code and documentation, were developed with assistance from **ChatGPT-4o**. The complete interaction history is available in `other/inputs/llms/usage.txt`, ensuring transparency in the use of AI tools during the workflow.
->>>>>>> new_main
