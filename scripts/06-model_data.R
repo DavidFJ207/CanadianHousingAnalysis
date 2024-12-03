@@ -12,8 +12,6 @@
 #   - This script performs exploratory data analysis, model fitting, assumption diagnostics, and validation.
 #   - Outputs include diagnostic plots, validation metrics, and a saved final model object (`final_model.rds`).
 
-
-
 #### Workspace setup ####
 library(tidyverse)
 library(caret)
@@ -40,20 +38,20 @@ initial_vif <- vif(initial_model)
 cat("Initial VIF Values:\n")
 print(initial_vif)
 
-# Remove highly correlated predictors (e.g., `cpi`)
-model_without_cpi <- lm(house_price ~ rate + gdp + construction + absorption, data = train_data)
-vif_without_cpi <- vif(model_without_cpi)
-cat("VIF Values after removing cpi:\n")
-print(vif_without_cpi)
+# Remove highly correlated predictors
+model_without_gdp <- lm(house_price ~ rate +cpi + construction + absorption, data = train_data)
+vif_without_gdp <- vif(model_without_gdp)
+cat("VIF Values after removing gdp:\n")
+print(vif_without_gdp)
 
 ### **Step 2: Model Fitting and Diagnostics** ###
 # Fit the updated model and check assumptions
 cat("Summary of the model without cpi:\n")
-print(summary(model_without_cpi))
+print(summary(model_without_gdp))
 
 # Residual diagnostics
-residuals <- residuals(model_without_cpi)
-fitted_values <- fitted(model_without_cpi)
+residuals <- residuals(model_without_gdp)
+fitted_values <- fitted(model_without_gdp)
 
 # Linearity: Residuals vs. Fitted Plot
 plot(fitted_values, residuals,
@@ -86,7 +84,7 @@ print(sd(residuals))
 
 ### **Step 3: Model Refinement and Validation** ###
 # Simplify model by evaluating predictors' significance
-final_model <- step(model_without_cpi, direction = "both", trace = FALSE)  # Stepwise AIC-based refinement
+final_model <- step(model_without_gdp, direction = "both", trace = FALSE)  # Stepwise AIC-based refinement
 cat("Final Model Summary:\n")
 print(summary(final_model))
 
@@ -109,5 +107,3 @@ saveRDS(
   final_model,
   file = "models/final_model.rds"
 )
-
-

@@ -1,0 +1,783 @@
+You said: 
+I need R code to simulate a housing market dataset. It should:
+1. Load tidyverse and arrow, and set a random seed.
+2. Create 1000 data points with these variables:
+   - construction (mean: 200, sd: 50)
+   - absorption (mean: 180, sd: 40)
+   - gdp (mean: 2.5, sd: 0.5)
+   - cpi (mean: 120, sd: 10)
+   - rate (mean: 3, sd: 0.75)
+3. Calculate house_price as:  
+   house_price = 100 + 0.3 \cdot construction + 0.4 \cdot absorption + 1.5 
+   \cdot gdp - 0.8 \cdot rate + random noise (mean: 0, sd: 10)
+4. Combine variables into a tibble.
+5. Save the dataset as a `.parquet` file in `data/00-simulated_data/`.
+
+Make the code clear and well-commented.
+
+ChatGPT said:
+ChatGPT
+Here's the R code for your request:
+
+r
+Copy code
+#### Workspace setup ####
+# Load required libraries
+library(tidyverse)
+library(arrow)
+
+# Set seed for reproducibility
+set.seed(853)
+
+#### Simulate data ####
+# Number of data points
+n <- 1000 
+
+# Simulate predictor variables
+construction <- rnorm(n, mean = 200, sd = 50)  # Number of homes constructed
+absorption <- rnorm(n, mean = 180, sd = 40)    # Homes absorbed in the market
+gdp <- rnorm(n, mean = 2.5, sd = 0.5)          # Gross Domestic Product
+cpi <- rnorm(n, mean = 120, sd = 10)           # Consumer Price Index
+rate <- rnorm(n, mean = 3, sd = 0.75)          # Interest rate
+
+# Generate house_price based on the formula + random noise
+house_price <- 100 + 
+  0.3 * construction + 
+  0.4 * absorption + 
+  1.5 * gdp - 
+  0.8 * rate +
+  rnorm(n, mean = 0, sd = 10)  # Adding random noise
+
+# Combine all variables into a tibble
+analysis_data <- tibble(
+  house_price,
+  construction,
+  absorption,
+  gdp,
+  cpi,
+  rate
+)
+
+#### Save data ####
+# Save the dataset as a .parquet file
+write_parquet(analysis_data, "data/00-simulated_data/simulated_data.parquet")
+Key Points:
+Commenting: Each section of the code is clearly labeled and explained.
+Readability: Variable names and steps are straightforward and aligned with your description.
+Saving: The file is saved in the specified location in .parquet format. Make 
+sure the data/00-simulated_data/ directory exists beforehand. You can create 
+it using dir.create("data/00-simulated_data", recursive = TRUE) if needed.
+
+You said:
+I need R code to load and validate a dataset stored in a `.parquet` file named 
+`"data/00-simulated_data/simulated_data.parquet"`. 
+The code should first check if the dataset is successfully loaded and then 
+perform a series of data validation tests. These tests include verifying that 
+the dataset has 1000 rows and 6 columns, ensuring all values in the `house_price` 
+column are unique, and confirming that specific columns (`construction`, 
+`absorption`, and `cpi`) contain valid numeric or positive values as required. 
+Additionally, the code should check for missing values, empty strings in certain 
+columns, and at least two unique values in the `rate` column. For each test, it
+should output a "Test Passed" or "Test Failed" message, and it should stop 
+execution if any validation fails.
+
+
+ChatGPT said:
+ChatGPT
+Here’s the R code to perform the specified tasks:
+
+r
+Copy code
+#### Workspace setup ####
+# Load required libraries
+library(tidyverse)
+library(arrow)
+
+# Load the dataset
+analysis_data <- tryCatch(
+  {
+    read_parquet("data/00-simulated_data/simulated_data.parquet")
+  },
+  error = function(e) {
+    stop("Test Failed: Unable to load the dataset. File not found or corrupted.")
+  }
+)
+
+# Check if the data was successfully loaded
+if (exists("analysis_data") && is.data.frame(analysis_data)) {
+  message("Test Passed: The dataset was successfully loaded.")
+} else {
+  stop("Test Failed: The dataset could not be loaded.")
+}
+
+#### Data validation tests ####
+
+# Check if the dataset has 1000 rows
+if (nrow(analysis_data) == 1000) {
+  message("Test Passed: The dataset has 1000 rows.")
+} else {
+  stop("Test Failed: The dataset does not have 1000 rows.")
+}
+
+# Check if the dataset has 6 columns
+if (ncol(analysis_data) == 6) {
+  message("Test Passed: The dataset has 6 columns.")
+} else {
+  stop("Test Failed: The dataset does not have 6 columns.")
+}
+
+# Check if all values in the 'house_price' column are unique
+if (n_distinct(analysis_data$house_price) == nrow(analysis_data)) {
+  message("Test Passed: All values in 'house_price' are unique.")
+} else {
+  stop("Test Failed: The 'house_price' column contains duplicate values.")
+}
+
+# Check if the 'construction' column contains only numeric values
+if (all(is.numeric(analysis_data$construction))) {
+  message("Test Passed: The 'construction' column contains only numeric values.")
+} else {
+  stop("Test Failed: The 'construction' column contains invalid values.")
+}
+
+# Check if the 'absorption' column contains only positive values
+if (all(analysis_data$absorption > 0)) {
+  message("Test Passed: The 'absorption' column contains only positive values.")
+} else {
+  stop("Test Failed: The 'absorption' column contains non-positive values.")
+}
+
+# Check if the 'cpi' column contains only numeric values
+if (all(is.numeric(analysis_data$cpi))) {
+  message("Test Passed: The 'cpi' column contains only numeric values.")
+} else {
+  stop("Test Failed: The 'cpi' column contains invalid values.")
+}
+
+# Check if there are any missing values in the dataset
+if (all(!is.na(analysis_data))) {
+  message("Test Passed: The dataset contains no missing values.")
+} else {
+  stop("Test Failed: The dataset contains missing values.")
+}
+
+# Check if there are no empty strings in 'house_price', 'construction', and 'gdp' columns
+if (all(analysis_data$house_price != "" & 
+        analysis_data$construction != "" & 
+        analysis_data$gdp != "")) {
+  message("Test Passed: There are no empty strings in 'house_price', 'construction', or 'gdp'.")
+} else {
+  stop("Test Failed: There are empty strings in one or more columns.")
+}
+
+# Check if the 'rate' column contains at least two unique values
+if (n_distinct(analysis_data$rate) >= 2) {
+  message("Test Passed: The 'rate' column contains at least two unique values.")
+} else {
+  stop("Test Failed: The 'rate' column contains less than two unique values.")
+}
+
+message("All tests passed successfully.")
+Key Points:
+Loading Data: Uses tryCatch to handle potential errors when loading the dataset.
+Validation Tests:
+Each validation outputs a "Test Passed" or stops execution with "Test Failed."
+Flexibility: Adjusts column-specific checks based on their data types and constraints.
+Final Output: If all tests pass, it outputs a success message.
+
+You said: 
+write R code that automates downloading and processing datasets from Statistics 
+Canada. The code should use the here, httr, utils, and rsdmx libraries to 
+download ZIP files for datasets like housing, CPI, GDP, construction, 
+absorption, and rate data, save them in organized subdirectories under 
+data/01-raw_data/, extract the contents, delete the ZIP files to save 
+space, and rename the extracted CSV files to descriptive names (e.g., 
+housing_price.csv, cpi.csv). It should also create the folder structure 
+if it doesn’t exist, be modular, and follow best practices with clear 
+comments for maintainability.
+
+
+ChatGPT said:
+ChatGPT
+Here’s the R code that meets your requirements:
+
+r
+Copy code
+#### Workspace Setup ####
+# Load required libraries
+library(tidyverse)
+library(httr)
+library(utils)
+library(here)
+
+#### Helper Functions ####
+# Function to download and process a dataset
+process_dataset <- function(url, subfolder, output_filename) {
+  # Create directory if it doesn't exist
+  dir_path <- here("data", "01-raw_data", subfolder)
+  dir.create(dir_path, recursive = TRUE, showWarnings = FALSE)
+  
+  # Define file paths
+  zip_path <- file.path(dir_path, "statcan_data.zip")
+  
+  # Download the ZIP file
+  GET(url, write_disk(zip_path, overwrite = TRUE))
+  
+  # Extract the ZIP file contents
+  unzip(zip_path, exdir = dir_path)
+  
+  # List all files in the directory
+  extracted_files <- list.files(dir_path, full.names = TRUE)
+  
+  # Filter to find the first CSV file
+  csv_file <- extracted_files[grepl("\\.csv$", extracted_files)][1]
+  
+  # Rename the CSV file to the desired output name
+  if (!is.na(csv_file)) {
+    output_path <- file.path(dir_path, output_filename)
+    file.rename(csv_file, output_path)
+    message("Processed: ", output_filename)
+  } else {
+    warning("No CSV file found in ZIP: ", url)
+  }
+  
+  # Delete the ZIP file to save space
+  file.remove(zip_path)
+}
+
+#### Download and Process Datasets ####
+# Define datasets with their URLs, subfolders, and output filenames
+datasets <- list(
+  list(
+    url = "https://www150.statcan.gc.ca/n1/tbl/csv/18100052-eng.zip",
+    subfolder = "housing",
+    filename = "housing_price.csv"
+  ),
+  list(
+    url = "https://www150.statcan.gc.ca/n1/tbl/csv/18100004-eng.zip",
+    subfolder = "cpi",
+    filename = "cpi.csv"
+  ),
+  list(
+    url = "https://www150.statcan.gc.ca/n1/tbl/csv/36100434-eng.zip",
+    subfolder = "gdp",
+    filename = "gdp.csv"
+  ),
+  list(
+    url = "https://www150.statcan.gc.ca/n1/tbl/csv/34100135-eng.zip",
+    subfolder = "construction",
+    filename = "house_construction.csv"
+  ),
+  list(
+    url = "https://www150.statcan.gc.ca/n1/tbl/csv/34100149-eng.zip",
+    subfolder = "absorption",
+    filename = "house_absorption.csv"
+  ),
+  list(
+    url = "https://www150.statcan.gc.ca/n1/tbl/csv/10100122-eng.zip",
+    subfolder = "rate",
+    filename = "rate.csv"
+  )
+)
+
+# Loop through datasets and process each
+for (dataset in datasets) {
+  process_dataset(dataset$url, dataset$subfolder, dataset$filename)
+}
+
+message("All datasets processed successfully.")
+Explanation:
+Workspace Setup: Loads necessary libraries (here, httr, utils, and tidyverse).
+Helper Function: Encapsulates the logic for downloading, extracting, and 
+renaming each dataset into a function (process_dataset) for reusability.
+Folder Management: Ensures each dataset is saved in an organized subdirectory.
+Processing Datasets: Uses a list of datasets, their URLs, subfolders, and output
+filenames to automate the download and processing steps.
+Clean-Up: Deletes ZIP files after extraction to save disk space.
+Modular Design: Makes it easy to add or modify datasets by updating the datasets 
+list.
+This code is modular, clean, and maintainable, following best practices.
+
+You said: 
+Write R code for cleaning and 
+preprocessing multiple datasets related to housing, CPI, GDP, construction, 
+absorption, and rates. The code should utilize the `here`, `tidyverse`, 
+`dplyr`, and `arrow` libraries for efficient data manipulation and management. 
+It should load raw data from CSV files stored in `data/01-raw_data/` 
+subdirectories, filter the datasets to include only relevant rows based on 
+specific criteria (e.g., geographic region, seasonal adjustments, and a 
+predefined date range), and ensure the data aligns with a list of target dates. 
+The filtered datasets should be merged into a single cohesive dataframe with 
+appropriately renamed columns for clarity. Finally, the merged data should be 
+saved in `.parquet` format in `data/02-analysis_data/`. The code should be 
+well-organized, modular, and clearly commented to ensure maintainability and 
+ease of understanding.
+
+
+ChatGPT said:
+ChatGPT
+Here's the R code to clean and preprocess multiple datasets as described:
+
+r
+Copy code
+#### Workspace Setup ####
+# Load required libraries
+library(tidyverse)
+library(here)
+library(dplyr)
+library(arrow)
+
+#### Helper Functions ####
+# Function to load and filter datasets
+load_and_filter <- function(file_path, filter_conditions, date_column, target_dates) {
+  read_csv(file_path) %>%
+    filter(!!!filter_conditions, as.Date(paste0(!!sym(date_column), "-01")) %in% target_dates)
+}
+
+# Define target dates
+target_dates <- seq.Date(
+  from = as.Date("1997-07-01"),
+  to = as.Date("2016-04-01"),
+  by = "quarter"
+)
+
+#### Load and Clean Datasets ####
+
+# Housing data
+housing_conditions <- exprs(
+  GEO == "Canada",
+  `New housing price indexes` == "Total (house and land)"
+)
+housing_data <- load_and_filter(
+  here("data", "01-raw_data", "housing", "housing_price.csv"),
+  housing_conditions,
+  "REF_DATE",
+  target_dates
+) %>%
+  select(REF_DATE, house_price = VALUE)
+
+# CPI data
+cpi_conditions <- exprs(
+  GEO == "Canada",
+  `Products and product groups` == "All-items"
+)
+cpi_data <- load_and_filter(
+  here("data", "01-raw_data", "cpi", "cpi.csv"),
+  cpi_conditions,
+  "REF_DATE",
+  target_dates
+) %>%
+  select(REF_DATE, cpi = VALUE)
+
+# GDP data
+gdp_conditions <- exprs(
+  GEO == "Canada",
+  `North American Industry Classification System (NAICS)` == "All industries [T001]",
+  `Seasonal adjustment` == "Seasonally adjusted at annual rates",
+  `Prices` == "2017 constant prices"
+)
+gdp_data <- load_and_filter(
+  here("data", "01-raw_data", "gdp", "gdp.csv"),
+  gdp_conditions,
+  "REF_DATE",
+  target_dates
+) %>%
+  select(REF_DATE, gdp = VALUE)
+
+# Construction data
+construction_conditions <- exprs(
+  GEO == "Canada",
+  `Housing estimates` == "Housing starts",
+  `Type of unit` == "Total units",
+  `Seasonal adjustment` == "Unadjusted"
+)
+construction_data <- load_and_filter(
+  here("data", "01-raw_data", "construction", "house_construction.csv"),
+  construction_conditions,
+  "REF_DATE",
+  target_dates
+) %>%
+  select(REF_DATE, construction = VALUE)
+
+# Absorption data
+absorption_conditions <- exprs(
+  GEO == "Toronto, Ontario",
+  `Completed dwelling units` == "Absorptions",
+  `Type of dwelling unit` == "Total units"
+)
+absorption_data <- load_and_filter(
+  here("data", "01-raw_data", "absorption", "house_absorption.csv"),
+  absorption_conditions,
+  "REF_DATE",
+  target_dates
+) %>%
+  select(REF_DATE, absorption = VALUE)
+
+# Rates data
+rate_conditions <- exprs(
+  GEO == "Canada",
+  Rates == "Bank rate"
+)
+rate_data <- load_and_filter(
+  here("data", "01-raw_data", "rate", "rate.csv"),
+  rate_conditions,
+  "REF_DATE",
+  target_dates
+) %>%
+  select(REF_DATE, rate = VALUE)
+
+#### Merge Datasets ####
+merged_data <- housing_data %>%
+  full_join(cpi_data, by = "REF_DATE") %>%
+  full_join(gdp_data, by = "REF_DATE") %>%
+  full_join(construction_data, by = "REF_DATE") %>%
+  full_join(absorption_data, by = "REF_DATE") %>%
+  full_join(rate_data, by = "REF_DATE")
+
+#### Save the Processed Data ####
+# Create output directory if not existing
+dir.create(here("data", "02-analysis_data"), recursive = TRUE, showWarnings = FALSE)
+
+# Save the merged dataset to a .parquet file
+write_parquet(merged_data, here("data", "02-analysis_data", "analysis_data.parquet"))
+
+message("Data cleaning and preprocessing completed successfully.")
+Explanation:
+Helper Functions: load_and_filter handles loading and filtering datasets based on user-defined conditions and target dates.
+Target Dates: The sequence of dates ensures consistent filtering across datasets.
+Filter Conditions: exprs is used to define conditions for each dataset, ensuring modularity.
+Column Renaming: Selects and renames relevant columns for clarity during the filtering step.
+Merging Data: Sequential full joins create a unified dataframe, aligning data by REF_DATE.
+Output: The merged data is saved in .parquet format for efficient storage and analysis. The output directory is created if it doesn’t exist.
+Modularity: The code is designed to be reusable and easy to extend.
+
+You said:
+Write R code that tests and validates a cleaned dataset loaded from a Parquet 
+file. The code should use the `tidyverse`, `testthat`, `arrow`, and `here` 
+libraries to load the data from a specified file path, ensuring the file exists 
+before proceeding. It should perform a series of tests to confirm the data's 
+integrity, including verifying that it loads as a data frame, has the correct 
+number of rows and columns, and contains no missing values. Additionally, the 
+code should test specific columns to ensure they are numeric, contain 
+non-negative values, and meet other requirements such as having a minimum 
+number of unique values or containing no invalid entries. Each test should 
+provide clear feedback about whether the dataset meets the expected conditions. 
+The code should be modular, reusable, and follow best practices for maintainability.
+
+ChatGPT said:
+ChatGPT
+Here's the R code that tests and validates a cleaned dataset loaded from a Parquet file:
+
+r
+Copy code
+#### Workspace Setup ####
+# Load required libraries
+library(tidyverse)
+library(testthat)
+library(arrow)
+library(here)
+
+#### Load Data ####
+# Specify file path
+file_path <- here("data", "02-analysis_data", "analysis_data.parquet")
+
+# Check if the file exists
+if (!file.exists(file_path)) {
+  stop("The specified file does not exist: ", file_path)
+}
+
+# Load the data into a descriptive variable
+analysis_data <- read_parquet(file_path)
+
+#### Validation Tests ####
+
+# Test suite
+test_that("Dataset Validation", {
+  
+  # Test: Data loads correctly
+  expect_s3_class(analysis_data, "data.frame")
+  expect_true(nrow(analysis_data) > 0) # Ensure there are rows
+  
+  # Test: Dataset has the expected number of columns
+  expected_num_columns <- 7
+  expect_equal(ncol(analysis_data), expected_num_columns, 
+               info = paste("Expected", expected_num_columns, "columns, found", ncol(analysis_data)))
+  
+  # Test: Specified columns are numeric
+  numeric_columns <- c("house_price", "rate", "gdp", "cpi", "construction", "absorption")
+  expect_true(all(sapply(analysis_data[numeric_columns], is.numeric)),
+              info = "Not all specified columns are numeric")
+  
+  # Test: No missing values in the dataset
+  expect_true(all(!is.na(analysis_data)), info = "Dataset contains missing values")
+  
+  # Test: Numeric columns contain only non-negative values
+  non_negative_check <- all(sapply(analysis_data[numeric_columns], function(x) all(x >= 0, na.rm = TRUE)))
+  expect_true(non_negative_check, info = "Some numeric columns contain negative values")
+  
+  # Test: 'rate' column contains at least two unique values
+  expect_true(length(unique(analysis_data$rate)) >= 2, info = "'rate' column has less than 2 unique values")
+  
+  # Test: 'house_price' column has valid values
+  house_price_check <- all(!is.na(analysis_data$house_price) & analysis_data$house_price != "")
+  expect_true(house_price_check, info = "'house_price' column contains invalid or empty values")
+})
+
+message("All tests passed successfully!")
+Key Features:
+File Existence Check: Ensures the file exists before attempting to load it.
+Test Suite: Implements all required validation checks using testthat:
+Validates the dataset loads as a data frame.
+Ensures it has the correct number of rows and columns.
+Verifies specified columns are numeric and contain non-negative values.
+Confirms there are no missing values and specific columns meet unique constraints.
+Modularity: Easy to modify for additional tests or columns in the dataset.
+Detailed Feedback: Provides clear error messages if any test fails.
+Reusability: Can be reused for similar datasets with minor adjustments.
+
+You said:
+Write R code for exploratory data analysis and linear modeling. The code should 
+use the `tidyverse`, `corrplot`, and `car` libraries to read a dataset from a 
+Parquet file and perform a series of analytical tasks. It should start by 
+selecting a response variable and a set of predictors, creating scatterplots 
+with regression lines for each predictor against the response variable. Then, 
+it should calculate and visualize a correlation matrix of the selected variables 
+using `corrplot`. Finally, the code should fit a linear regression model using 
+the specified predictors to predict the response variable, and save the 
+resulting model as an RDS file for future use. The output should be clear, 
+well-organized, and modular to support ease of reuse and interpretation.
+
+
+ChatGPT said:
+ChatGPT
+Here's the R code for exploratory data analysis and linear modeling:
+
+r
+Copy code
+#### Workspace Setup ####
+# Load required libraries
+library(tidyverse)
+library(corrplot)
+library(car)
+library(arrow)
+library(here)
+
+#### Read Data ####
+# Specify the file path and load the dataset
+file_path <- here("data", "02-analysis_data", "analysis_data.parquet")
+if (!file.exists(file_path)) {
+  stop("The specified file does not exist: ", file_path)
+}
+
+analysis_data <- read_parquet(file_path)
+
+#### Define Response and Predictors ####
+response <- "house_price"
+predictors <- c("rate", "gdp", "cpi", "construction", "absorption")
+
+# Select relevant columns for analysis
+eda_data <- analysis_data %>% 
+  select(all_of(c(response, predictors)))
+
+#### Scatterplots with Regression Lines ####
+# Generate scatterplots for each predictor vs response
+for (predictor in predictors) {
+  p <- ggplot(eda_data, aes_string(x = predictor, y = response)) +
+    geom_point(alpha = 0.7) +
+    geom_smooth(method = "lm", color = "blue", se = FALSE) +
+    labs(
+      title = paste("Scatterplot of", response, "vs", predictor),
+      x = predictor,
+      y = response
+    ) +
+    theme_minimal()
+  
+  print(p) # Display the plot
+}
+
+#### Correlation Matrix ####
+# Calculate correlation matrix
+cor_matrix <- cor(eda_data, use = "complete.obs")
+
+# Visualize correlation matrix
+corrplot(cor_matrix, method = "circle", type = "upper", 
+         tl.col = "black", tl.srt = 45, 
+         title = "Correlation Matrix")
+
+#### Linear Regression Model ####
+# Fit a linear regression model
+linear_model <- lm(
+  formula = as.formula(paste(response, paste(predictors, collapse = " + "), sep = " ~ ")),
+  data = eda_data
+)
+
+# Summarize the model
+summary(linear_model)
+
+#### Save the Model ####
+# Create directory for models if it doesn't exist
+model_dir <- here("models")
+dir.create(model_dir, recursive = TRUE, showWarnings = FALSE)
+
+# Save the linear model as an RDS file
+saveRDS(linear_model, file = file.path(model_dir, "first_model.rds"))
+
+message("Model saved successfully at: ", file.path(model_dir, "first_model.rds"))
+Explanation:
+Data Reading:
+
+Uses arrow and here libraries to locate and load the Parquet file.
+Includes a check to ensure the file exists.
+Variable Selection:
+
+Dynamically selects the response variable and predictors, ensuring flexibility.
+Scatterplots:
+
+Creates scatterplots with regression lines for each predictor vs the response using a loop.
+Correlation Matrix:
+
+Computes the correlation matrix for the selected variables.
+Visualizes the matrix with corrplot.
+Linear Model:
+
+Fits a linear regression model using the selected predictors.
+Outputs a summary of the model for analysis.
+Model Saving:
+
+Saves the fitted model as an RDS file in a models directory for reuse.
+This code is modular, reusable, and provides clear visualizations and model outputs, making it ideal for exploratory analysis and regression modeling tasks.
+
+You said: 
+create R code for data preparation, model fitting, diagnostics, and validation 
+for a regression analysis task. The code should begin by reading a dataset from 
+a Parquet file, splitting it into training and testing sets, and exploring 
+correlations among predictors. It should identify and address multicollinearity 
+using Variance Inflation Factor (VIF) analysis, iteratively refining the model 
+by removing highly correlated predictors. After fitting the model, the code 
+should perform residual diagnostics to check for assumptions like linearity, 
+homoscedasticity, and normality, using appropriate plots and summaries. The 
+refined model should then be validated on the test set by calculating metrics 
+like RMSE, MAE, and R-squared. Finally, the code should save the validated 
+model to an RDS file for future use, ensuring modularity, clarity, and 
+maintainability throughout.
+
+ChatGPT said:
+ChatGPT
+Here’s the R code for the described regression analysis workflow:
+
+r
+Copy code
+#### Workspace Setup ####
+# Load required libraries
+library(tidyverse)
+library(caret)
+library(car)
+library(arrow)
+library(here)
+
+#### Step 1: Data Preparation ####
+# Read dataset from Parquet file
+file_path <- here("data", "02-analysis_data", "analysis_data.parquet")
+if (!file.exists(file_path)) {
+  stop("The specified file does not exist: ", file_path)
+}
+
+analysis_data <- read_parquet(file_path)
+
+# Split data into training (80%) and testing (20%) sets
+set.seed(123)
+train_index <- createDataPartition(analysis_data$house_price, p = 0.8, list = FALSE)
+train_data <- analysis_data[train_index, ]
+test_data <- analysis_data[-train_index, ]
+
+# Correlation matrix
+predictors <- c("rate", "gdp", "cpi", "construction", "absorption")
+correlation_matrix <- cor(train_data[, predictors], use = "complete.obs")
+cat("Correlation Matrix:\n")
+print(correlation_matrix)
+
+# Initial VIF check
+initial_model <- lm(house_price ~ rate + gdp + cpi + construction + absorption, data = train_data)
+cat("Initial VIF Values:\n")
+print(vif(initial_model))
+
+# Refine model by removing highly correlated predictors
+refined_model <- lm(house_price ~ rate + gdp + construction + absorption, data = train_data)
+cat("VIF Values After Refinement:\n")
+print(vif(refined_model))
+
+#### Step 2: Model Fitting and Diagnostics ####
+# Fit the refined model
+cat("Refined Model Summary:\n")
+print(summary(refined_model))
+
+# Residual diagnostics
+residuals <- residuals(refined_model)
+fitted_values <- fitted(refined_model)
+
+# Linearity: Residuals vs Fitted
+plot(fitted_values, residuals,
+     main = "Residuals vs. Fitted Values",
+     xlab = "Fitted Values",
+     ylab = "Residuals",
+     pch = 20, col = "blue")
+abline(h = 0, col = "red", lty = 2)
+
+# Homoscedasticity: Scale-Location Plot
+sqrt_abs_residuals <- sqrt(abs(residuals))
+plot(fitted_values, sqrt_abs_residuals,
+     main = "Scale-Location Plot",
+     xlab = "Fitted Values",
+     ylab = "Square Root of Absolute Residuals",
+     pch = 20, col = "blue")
+abline(h = mean(sqrt_abs_residuals), col = "red", lty = 2)
+
+# Normality: Q-Q Plot
+qqnorm(residuals, main = "Normal Q-Q Plot")
+qqline(residuals, col = "red", lty = 2)
+
+# Summarize residual diagnostics
+cat("Summary of Residuals:\n")
+print(summary(residuals))
+cat("\nStandard Deviation of Residuals:\n")
+print(sd(residuals))
+
+#### Step 3: Model Validation ####
+# Validate model on test set
+predictions <- predict(refined_model, newdata = test_data)
+test_residuals <- test_data$house_price - predictions
+
+# Compute validation metrics
+rmse <- sqrt(mean(test_residuals^2))
+mae <- mean(abs(test_residuals))
+r_squared <- 1 - (sum(test_residuals^2) / sum((test_data$house_price - mean(test_data$house_price))^2))
+
+cat("Validation Metrics:\n")
+cat("RMSE:", round(rmse, 2), "\n")
+cat("MAE:", round(mae, 2), "\n")
+cat("R-squared:", round(r_squared, 4), "\n")
+
+#### Step 4: Save Final Model ####
+# Create models directory if it doesn't exist
+model_dir <- here("models")
+dir.create(model_dir, recursive = TRUE, showWarnings = FALSE)
+
+# Save the final model
+saveRDS(refined_model, file = file.path(model_dir, "final_model.rds"))
+cat("Final model saved successfully to:", file.path(model_dir, "final_model.rds"), "\n")
+Explanation:
+Data Preparation:
+Reads data from a Parquet file.
+Splits the data into training and testing sets using an 80/20 split.
+Computes and prints a correlation matrix for predictors.
+Multicollinearity Handling:
+Fits an initial linear model to assess multicollinearity using VIF.
+Refines the model by removing highly correlated predictors.
+Model Diagnostics:
+Checks model assumptions (linearity, homoscedasticity, and normality) using diagnostic plots.
+Summarizes and prints residual statistics.
+Model Validation:
+Predicts on the test set and computes RMSE, MAE, and R-squared to evaluate model performance.
+Model Saving:
+Saves the validated model to an RDS file for future use.
+This code is modular, clear, and adheres to best practices for maintainability and reuse.

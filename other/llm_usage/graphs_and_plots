@@ -1,0 +1,84 @@
+You said:
+
+Write an R script to compare observed and simulated datasets for housing price 
+analysis using a pre-trained model stored in final_model.rds. The script should
+include data structure checks using glimpse, summary statistics for both 
+datasets, and a visualization comparing the NHPI against predictor variables 
+(rate, gdp, cpi, construction, and absorption). Use faceted scatter plots to 
+highlight differences between observed and simulated data, and include 
+predictions of house prices for both datasets using the model, displaying the 
+results for further comparison.
+
+
+ChatGPT said:
+ChatGPT
+Here’s the R script to address your request:
+
+R
+Copy code
+# Load necessary libraries
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(here)
+
+# Load the pre-trained model
+final_model <- readRDS(here::here("models/final_model.rds"))
+
+#### Compare the datasets ####
+
+# Check the structure of both datasets
+glimpse(analysis_data)
+glimpse(sim_data)
+
+# Summary statistics comparison
+summary_stats <- list(
+  observed = summary(analysis_data),
+  simulated = summary(sim_data)
+)
+
+# Visualization: NHPI vs Predictor Variables for both datasets
+# Prepare observed data
+observed_long <- analysis_data %>%
+  pivot_longer(cols = c("rate", "gdp", "cpi", "construction", "absorption"), 
+               names_to = "Variable", 
+               values_to = "Value") %>%
+  mutate(Dataset = "Observed")
+
+# Prepare simulated data
+simulated_long <- sim_data %>%
+  pivot_longer(cols = c("rate", "gdp", "cpi", "construction", "absorption"), 
+               names_to = "Variable", 
+               values_to = "Value") %>%
+  mutate(Dataset = "Simulated")
+
+# Combine datasets
+combined_data <- bind_rows(observed_long, simulated_long)
+
+# Plot comparison
+comparison_plot <- combined_data %>%
+  ggplot(aes(x = Value, y = house_price, color = Dataset)) +
+  geom_point(alpha = 0.5) +
+  facet_wrap(~Variable, scales = "free_x") +
+  theme_minimal() +
+  labs(title = "Comparison of Observed vs Simulated NHPI",
+       x = "Predictor Value",
+       y = "House Price",
+       color = "Dataset")
+
+print(comparison_plot)
+
+#### Model-based comparison ####
+
+# Predict NHPI for observed data
+observed_predictions <- analysis_data %>%
+  mutate(Predicted_House_Price = predict(final_model, newdata = .))
+
+# Predict NHPI for simulated data
+simulated_predictions <- sim_data %>%
+  mutate(Predicted_House_Price = predict(final_model, newdata = .))
+
+# Display predicted data
+head(observed_predictions)
+head(simulated_predictions)
+This script ensures the analysis and visualization align with the requirements of comparing observed and simulated datasets, using the model to predict housing prices for both.

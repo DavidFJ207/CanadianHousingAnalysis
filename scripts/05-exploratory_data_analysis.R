@@ -22,6 +22,7 @@
 library(tidyverse)
 library(corrplot)
 library(car)
+library(arrow)
 
 #### Read data ####
 analysis_data <- read_parquet(here::here("data", "02-analysis_data", "analysis_data.parquet"))
