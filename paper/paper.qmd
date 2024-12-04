@@ -6,7 +6,7 @@ author:
 thanks: "Code and data are available at: https://github.com/DavidFJ207/CanadianHousingAnalysis"
 date: today
 date-format: long
-abstract: "This study examines indicators influencing Canadian housing prices through the New Housing Price Index (NHPI) and key predictors: newly constructed homes, housing absorption, GDP, CPI, and interest rates. Linear regression shows GDP and CPI as the most significant predictors, with housing absorption and interest rates playing secondary roles"
+abstract: "This study analyzes factors influencing Canadian housing prices, focusing on key economic indicators such as the New Housing Price Index (NHPI), housing availability, absorption, inflation (CPI), and interest rates using linear regression. The findings reveal that inflation and interest rates are the most significant predictors of housing prices, while supply-demand dynamics, as measured by absorption, play a smaller role. These results demonstrate the complex interplay of macroeconomic factors on housing affordability, highlighting the importance of inflation control and borrowing costs in shaping the housing market. This research provides policymakers and stakeholders with actionable insights to design strategies for improving housing affordability and stabilizing the market amidst economic fluctuations."
 format: pdf
 number-sections: true
 bibliography: references.bib
