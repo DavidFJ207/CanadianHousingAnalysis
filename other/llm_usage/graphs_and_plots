@@ -81,4 +81,99 @@ simulated_predictions <- sim_data %>%
 # Display predicted data
 head(observed_predictions)
 head(simulated_predictions)
-This script ensures the analysis and visualization align with the requirements of comparing observed and simulated datasets, using the model to predict housing prices for both.
+This script ensures the analysis and visualization align with the requirements 
+of comparing observed and simulated datasets, using the model to predict housing
+prices for both.
+
+You said:
+create an R script for comparing observed and simulated datasets using a 
+predictive model. The script should load a pre-trained model from an RDS file, 
+transform both observed and simulated datasets into a long format for 
+visualization, and combine them into a single dataset labeled by source. It 
+should generate a faceted scatterplot comparing predictor variables against the 
+response variable, highlighting differences between observed and simulated data. 
+Additionally, the code should use the model to predict the response variable 
+(house_price) for both datasets and append the predictions for further analysis, 
+formatted for use in a Quarto or R Markdown document with clean and concise 
+chunk options.
+
+ChatGPT said:
+ChatGPT
+Here's the R script tailored to your requirements:
+
+{r}
+Copy code
+#| label: fig-compare-data
+#| fig-cap: Comparison of Observed and Simulated Data
+#| echo: false
+#| eval: true
+#| warning: false
+#| message: false
+
+# Load required libraries
+library(tidyverse)
+library(here)
+
+# Load the predictive model
+final_model <- readRDS(here::here("models/final_model.rds"))
+
+# Prepare observed data
+observed_long <- analysis_data %>%
+  pivot_longer(
+    cols = c("rate", "gdp", "cpi", "construction", "absorption"),
+    names_to = "Variable",
+    values_to = "Value"
+  ) %>%
+  mutate(Dataset = "Observed")
+
+# Prepare simulated data
+simulated_long <- sim_data %>%
+  pivot_longer(
+    cols = c("rate", "gdp", "cpi", "construction", "absorption"),
+    names_to = "Variable",
+    values_to = "Value"
+  ) %>%
+  mutate(Dataset = "Simulated")
+
+# Combine datasets for visualization
+combined_data <- bind_rows(observed_long, simulated_long)
+
+# Generate faceted scatterplot
+combined_data %>%
+  ggplot(aes(x = Value, y = house_price, color = Dataset)) +
+  geom_point(alpha = 0.5) +
+  facet_wrap(~Variable, scales = "free_x") +
+  theme_minimal() +
+  labs(
+    title = "Comparison of Observed vs Simulated NHPI",
+    x = "Predictor Value",
+    y = "House Price",
+    color = "Dataset"
+  )
+
+#### Model-based predictions ####
+
+# Predict NHPI for observed data
+observed_predictions <- analysis_data %>%
+  mutate(Predicted_House_Price = predict(final_model, newdata = .))
+
+# Predict NHPI for simulated data
+simulated_predictions <- sim_data %>%
+  mutate(Predicted_House_Price = predict(final_model, newdata = .))
+
+# Print preview of predictions for further analysis
+head(observed_predictions)
+head(simulated_predictions)
+Key Notes:
+Dependencies: Ensure that the tidyverse and here packages are installed and 
+loaded.
+Datasets: Replace analysis_data and sim_data with your actual dataset objects.
+Path to Model: Update "models/final_model.rds" to the correct path if the model 
+file is located elsewhere.
+Formatting for Quarto/R Markdown: The chunk options ensure clean output suitable 
+for a reproducible report.
+This script integrates data preparation, visualization, and prediction into a 
+concise workflow for comparing observed and simulated datasets.
+
+
+

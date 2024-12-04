@@ -1,12 +1,12 @@
 ---
-title: "Economic Dynamics of Housing Prices"
-subtitle: "Analyzing Predictors Using the New Housing Price Index"
+title: "Housing Prices in Canada: Economic Forces Shaping Affordability"
+subtitle: "Analyzing Predictors againts the New Housing Price Index"
 author: 
   - Gadiel David Flores Jimenez
 thanks: "Code and data are available at: https://github.com/DavidFJ207/CanadianHousingAnalysis"
 date: today
 date-format: long
-abstract: "This study examines factors influencing Canadian housing prices through the New Housing Price Index (NHPI) and key predictors: newly constructed homes, housing absorption, GDP, CPI, and interest rates. Linear regression reveals GDP and CPI as the most significant predictors, with housing absorption and interest rates playing secondary roles"
+abstract: "This study examines indicators influencing Canadian housing prices through the New Housing Price Index (NHPI) and key predictors: newly constructed homes, housing absorption, GDP, CPI, and interest rates. Linear regression shows GDP and CPI as the most significant predictors, with housing absorption and interest rates playing secondary roles"
 format: pdf
 number-sections: true
 bibliography: references.bib
@@ -17,26 +17,22 @@ bibliography: references.bib
 #| warning: false
 #| message: false
 
-library(lubridate)
-library(readr)
-library(ggplot2)
+library(tidyverse)
+library(lubridate) 
+library(knitr)     
+library(kableExtra) 
 library(dplyr)
-library(kableExtra)
-library(bayesplot)
-library(tidyr)
-library(knitr)
-
 
 analysis_data <- arrow::read_parquet(here::here("data", "02-analysis_data", "analysis_data.parquet"))
 sim_data <- arrow::read_parquet(here::here("data", "00-simulated_data", "simulated_data.parquet"))
 ```
 # Introduction
 ## Overview
-This analysis examines what pushes the cost of homes in Canada, focusing on supply, demand, inflation, and borrowing costs. These factors are recognized as central influences on housing prices, but their exact roles and interactions are often debated. By organizing and cleaning data from Statistics Canada, this research aims to create a clear picture of how these factors collectively shape housing affordability. This approach provides valuable look into the forces driving one of the most important components of Canada’s economy.
+This analysis examines what pushes the cost of homes in Canada, focusing on supply, demand, inflation, and borrowing costs. These indicators are recognized as central influences on housing prices, but their exact roles and interactions are often debated. By organizing and cleaning data from Statistics Canada, this research aims to create a clear picture of how these indicators collectively shape housing affordability. This approach provides an important look into the forces driving one of the most important components of Canada’s economy.
 
-A central goal of this analysis is to understand how changes in supply, demand, inflation, and borrowing costs impact home prices. In the current economic climate, there is a popular belief that reducing the number of buyers in the housing market could significantly increase the availability of homes, thereby lowering prices. This assumption relies on the idea that fewer buyers create less competition, weakening sellers’ ability to demand higher prices. Key factors influencing this dynamic, such as higher borrowing costs discouraging potential buyers or shifts in demand due to economic uncertainty, play a vital role in understanding housing affordability trends.
+A central goal of this analysis is to understand how changes in supply, demand, inflation, and borrowing costs impact home prices. In the current economic climate, there is a popular belief that reducing the number of buyers in the housing market could significantly increase the availability of homes, thereby lowering prices. This assumption relies on the idea that fewer buyers create less competition, weakening sellers’ ability to demand higher prices. Key indicators influencing this dynamic, such as higher borrowing costs discouraging potential buyers or shifts in demand due to economic uncertainty, play a vital role in understanding housing affordability trends.
 
-This research looks into these claims by examining how supply and demand, combined with economic pressures like inflation and interest rates, contribute to housing market fluctuations. By modeling the relationships between these variables, the study seeks to provide evidence based look into the housing market’s behavior. Understanding these dynamics is important for policymakers, developers, and prospective homeowners, as it sheds light on potential strategies to improve affordability and stabilize the housing market amidst economic challenges.
+This research looks into these claims by examining how supply and demand, combined with economic pressures like inflation and interest rates, contribute to housing market fluctuations. By modeling the relationships between these variables, the study seeks to provide evidence based look into the housing market’s behavior. Understanding these dynamics is important for policymakers, developers, and prospective homeowners, as it shows potential strategies to improve affordability and stabilize the housing market amidst economic challenges.
 
 
 This paper is structured into several key sections to ensure a clear and logical presentation of the research. In the **Data** section (@sec-data), we outline the datasets used, including their sources, variables, and measurements, and provide visualizations to explore trends and relationships. The **Model** section (@sec-model) describes the goals, the steps taken to refine the model, and how it was evaluated for accuracy and reliability. The **Results** section (@sec-results) highlights key findings, including the impact of different predictors on housing prices and the model’s overall performance. In the **Discussion** section (@sec-discussion), we go into the broader implications of these results, addressing housing affordability, economic trends, and policy suggestions while acknowledging the study's limitations and areas for future research. The **Appendix** (@sec-appendix) provides additional methodological details, such as data collection and sampling techniques, and explores the use of simulations to enhance the analysis. Finally, all references are compiled in the **References** section (@sec-references), ensuring proper attribution and a robust foundation for this study.
@@ -45,12 +41,12 @@ This paper is structured into several key sections to ensure a clear and logical
 
 # Data {#sec-data}
 ## Overview 
-We use the statistical programming language R [@citeR] to analyze housing prices in Toronto. The data for this project was sourced from Statistics Canada @StatCan, including five datasets. These datasets provided information on the new housing price index, housing absorption, GDP, CPI, interest rates, and construction statistics. The data spans from 1997 to 2016 and is divided quarterly, yielding 76 entries. For this analysis, we are only using data from 1997 to 2016, as it represents the most complete and consistent period available. Rather than using this data to predict future housing prices, our focus is on understanding the relationships between the predictors and the response variable, providing insights into how these factors interact and influence housing prices.
+We use the statistical programming language R [@citeR] to analyze housing prices in Toronto. The data for this project was sourced from Statistics Canada @StatCan, including five datasets. These datasets provided information on the new housing price index, housing absorption, GDP, CPI, interest rates, and construction statistics. The data spans from 1997 to 2016 and is divided quarterly, yielding 76 entries. For this analysis, we are only using data from 1997 to 2016, as it represents the most complete and consistent period available. Rather than using this data to predict future housing prices, our focus is on understanding the relationships between the predictors and the response variable, providing findings into how these indicators interact and influence housing prices.
 
 ## Measurement
 
 ### Outcome Variable: New Housing Price Index
-The New Housing Price Index (NHPI) data, provided by Statistics Canada (@StatCan-NewHousingPriceIndex), is a way to measure how the prices of newly built houses in Canada change over time. It tracks the prices of new homes, like single-family houses and townhomes, while making sure that comparisons are fair by keeping the house features the same. This helps people understand if housing is becoming more expensive or affordable and why, considering factors like construction costs and market demand. It’s used by everyone from economists and policymakers to builders and homebuyers to make informed decisions about the housing market.
+The New Housing Price Index (NHPI) data, provided by Statistics Canada (@StatCan-NewHousingPriceIndex), is a way to measure how the prices of newly built houses in Canada change over time. It tracks the prices of new homes, like single-family houses and townhomes, while making sure that comparisons are fair by keeping the house features the same. This helps people understand if housing is becoming more expensive or affordable and why, considering indicators like construction costs and market demand. It’s used by everyone from economists and policymakers to builders and homebuyers to make informed decisions about the housing market.
 
 ```{r}
 #| label: fig-new-housing-price
@@ -74,15 +70,15 @@ semiannual_data <- analysis_data |>
 # Plot data
 semiannual_data |> 
   ggplot(aes(x = SixMonthPeriod, y = mean_house_price)) +
-  geom_line(color = "darkgreen", linewidth = 0.2) + 
-  geom_point(color = "black", size = 0.5) + 
+  geom_line(color = "darkgreen", linewidth = 1) + 
+  geom_point(color = "black", size = 1) + 
   theme_minimal() +
   labs(x = "Year",
        y = "Housing Price Index")
 
 ```
 
-The graph labeled @fig-new-housing-price reveals a steady upward trend in housing prices in Canada over time, with a notable rapid increase from 2005 to 2008, stabilization around 2008-2010, and consistent growth post-2010.  
+The graph labeled @fig-new-housing-price shows a steady upward trend in housing prices in Canada over time, with a notable increase from 2005 to 2008, stabilization around 2008-2010, and consistent growth post-2010.  
 
 \newpage 
 
@@ -110,7 +106,7 @@ The bar @fig-available-homes chart shows the number of available homes in Canada
 \newpage 
 #### Housing Sales  
 
-The Canada Mortgage and Housing Corporation (CMHC) maintains an extensive database with over 14,000 housing series, offering monthly data on housing unoccupied newly built homes, vacancy rates, and mortgage details. These statistics, accessible via CANSIM, provide valuable insights into residential availability and market dynamics. This data is provided under @StatCan-HousingAbsorptions.  
+The Canada Mortgage and Housing Corporation (CMHC) maintains an extensive database with over 14,000 housing series, offering monthly data on housing unoccupied newly built homes, vacancy rates, and mortgage details. These statistics, accessible via CANSIM, provide beneficial findings into residential availability and market dynamics. This data is provided under @StatCan-HousingAbsorptions.  
 ```{r}
 #| label: fig-sold-homes
 #| fig-cap: Sold Homes Over Time
@@ -131,7 +127,7 @@ analysis_data |>
 \newpage
 
 #### Gross Domestic Proudct
-Gross Domestic Product (GDP) measures the total value of all goods and services produced within Canada's borders, providing a snapshot of the country's economic activity. The term "gross" includes costs like depreciation of capital assets, while "domestic" focuses on activities within Canada. GDP data is categorized by industry, offering insight into how various sectors contribute to economic performance. This information, provided by Statistics Canada (@StatCan-GDP), is essential for understanding economic trends, planning policies, and evaluating industrial performance on a monthly basis.  
+Gross Domestic Product (GDP) measures the total value of all goods and services produced within Canada's borders, providing a snapshot of the country's economic activity. The term "gross" includes costs like depreciation of capital assets, while "domestic" focuses on activities within Canada. GDP data is categorized by industry, offering finding into how various sectors contribute to economic performance. This information, provided by Statistics Canada (@StatCan-GDP), is essential for understanding economic trends, planning policies, and evaluating industrial performance on a monthly basis.  
 ```{r}
 #| label: fig-gdp
 #| fig-cap: Gross Domestic Product
@@ -199,41 +195,67 @@ analysis_data |>
 
 ## Summary  
 
-The data has been prepared for analysis through cleaning, transformation, and visualization. Each variable has been integrated into a cohesive dataset that will allow us to investigate how supply, demand, and economic factors impact housing prices in Canada. Our initial analysis shows how housing prices in Toronto from 1997 to 2016 were shaped by various factors. The New Housing Price Index showed a steady rise, with notable growth from 2005 to 2008, a pause during the 2008 financial crisis, and consistent increases afterward. Construction peaked in the mid-2000s and stabilized post-2010, while home sales peaked earlier, around 2000-2005, before gradually declining. Economic growth and inflation, reflected in GDP and CPI, steadily increased, while interest rates peaked in the early 2000s and fell significantly after 2008. These patterns highlight the complex interaction between supply, demand, and economic conditions in influencing housing prices.   
+The data has been prepared for analysis through cleaning, transformation, and visualization. Each variable has been integrated into a cohesive dataset that will allow us to investigate how supply, demand, and economic indicators impact housing prices in Canada. Our initial analysis shows how housing prices in Toronto from 1997 to 2016 were shaped by various causes. The New Housing Price Index showed a steady rise, with notable growth from 2005 to 2008, a pause during the 2008 financial crisis, and consistent increases afterward. Construction peaked in the mid-2000s and stabilized post-2010, while home sales peaked earlier, around 2000-2005, before gradually declining. Economic growth and inflation, reflected in GDP and CPI, steadily increased, while interest rates peaked in the early 2000s and fell significantly after 2008. These patterns highlight the complex interaction between supply, demand, and economic conditions in influencing housing prices.   
   
 \newpage   
 # Model{#sec-model}
 ## Goal of the Model
-We want to analyze house prices based on economic factors like interest rates, GDP, and absorption. To do this, we created a model that looks at the relationships between these factors and house prices, ensuring it's both accurate and easy to interpret.
+We want to analyze house prices based on economic indicators like interest rates, GDP, and absorption. To do this, we created a model that looks at the relationships between these indicators and house prices, ensuring it's both accurate and easy to interpret.
 
 ### Exploration and Refinement
 
 1. Exploring the Data:  
-   We looked at the relationships between each factor and house prices using scatterplots. For example:
-   - Interest Rate: A clear negative relationship—higher rates are linked to lower house prices.
-   - GDP and CPI: Both show strong positive relationships with house prices.
-   - Absorption: Also negatively linked to house prices, but with more variability.  
+   We looked at the relationships between each indicator and house prices using scatterplots. For example:
+   - Interest Rate: A clear negative relationship—higher rates are linked to lower house prices. @fig-rate-im
+   
 ```{r}
-#| label: tbl-relations
-#| fig.cap: "Visualizations of House Prices"
+#| label: fig-rate-im
+#| fig-cap: House Price vs Rates
 #| echo: false
-#| layout-ncol: 2
+#| eval: true
+#| warning: false
+#| message: false
 
-knitr::include_graphics(c(
-  here::here("paper", "house_v_absorption.png"),
-  here::here("paper", "house_v_gdp.png"),
-  here::here("paper", "house_v_price.png")
-))
+knitr::include_graphics(here::here("paper", "house_v_price.png"))
+
+
+```
+   - GDP and CPI: Both show strong positive relationships with house prices. @fig-cpi-im
+```{r}
+#| label: fig-cpi-im
+#| fig-cap: House Price vs Rates
+#| echo: false
+#| eval: true
+#| warning: false
+#| message: false
+
+knitr::include_graphics(
+  here::here("paper", "house_v_gdp.png")
+)
+
+```   
+   - Absorption: Also negatively linked to house prices, but with more variability. @fig-absorption-im
+```{r}
+#| label: fig-absorption-im
+#| fig-cap: House Price vs Rates
+#| echo: false
+#| eval: true
+#| warning: false
+#| message: false
+
+knitr::include_graphics(
+  here::here("paper", "house_v_absorption.png")
+)
 
 ```
 
 \newpage 
 
-To ensure these factors don’t overlap too much in their information (a problem called "multicollinearity"), we used a tool called the Variance Inflation Factor (VIF). This told us that GDP and CPI were too similar to both be useful, so we removed GDP to simplify the model.
+To ensure these indicators don’t overlap too much in their information (a problem called "multicollinearity"), we used a tool called the Variance Inflation indicator (VIF). This told us that GDP and CPI were too similar to both be useful, so we removed GDP to simplify the model.
 
 2. Checking Assumptions:  
 For our model to work well, it needs to satisfy certain assumptions:
-   - Linearity: The relationships between factors and house prices should follow straight lines.
+   - Linearity: The relationships between indicators and house prices should follow straight lines.
    - Consistent Variance: The errors in our predictions (residuals) should spread out evenly.
    - Normal Distribution: The residuals should follow a bell-shaped curve.
 
@@ -243,7 +265,7 @@ We checked these assumptions using plots:
    - Normal Q-Q Plot: Mostly aligned with expectations, except for a few extreme points (outliers).
 
 3. Refining the Model:  
-We used step-by-step selection to find the most important factors. The final model kept:
+We used step-by-step selection to find the most important indicators. The final model kept:
    - Interest Rate: Lower rates are linked to higher house prices.
    - GDP: A major positive influence.
    - Absorption: Significant but negatively linked, meaning more market activity tends to reduce prices.  
@@ -253,7 +275,7 @@ We removed construction because it wasn’t contributing much.
 
 ### Final Model Performance
 
-1. Key Insights:
+1. Key findings:
    - The model explains 97% of the variation in house prices, showing it’s highly accurate.
    - It performs well on both the training and test data, proving it’s reliable for predicting unseen scenarios.
 
@@ -278,7 +300,7 @@ Our results are summarized in @tbl-modelresults.
 
 # Summarizing the results
 results_table <- data.frame(
-  Factor = c("Bank Interest Rate", "CPI", "Housing Absorption"),
+  indicator = c("Bank Interest Rate", "CPI", "Housing Absorption"),
   Effect_on_NHPI = c("0.99 per unit increase", "1.53 per unit increase", "-0.003 per unit increase")
 )
 
@@ -291,9 +313,9 @@ kable(results_table, caption = "Summary of NHPI Model Results") %>%
 
 ```
 
-Our analysis reveals valuable insights into how economic factors influence the New Housing Price Index (NHPI). A 1% increase in bank interest rates corresponds to a 0.99 increase in the NHPI, while inflation, as measured by CPI, has a significant positive effect on housing prices, with a one-unit increase in CPI leading to a 1.53-unit rise in the NHPI. Interestingly, housing absorption, which tracks how many new houses are sold, shows a slightly negative relationship, with each additional house sold decreasing the NHPI by 0.003.
+Our analysis shows beneficial findings into how economic indicators influence the New Housing Price Index (NHPI). A 1% increase in bank interest rates corresponds to a 0.99 increase in the NHPI, while inflation, as measured by CPI, has a significant positive effect on housing prices, with a one-unit increase in CPI leading to a 1.53-unit rise in the NHPI. Interestingly, housing absorption, which tracks how many new houses are sold, shows a slightly negative relationship, with each additional house sold decreasing the NHPI by 0.003.
 
-It is important to note that these changes do not occur in isolation. As this is a linear regression model, the effects of interest rates, CPI, and housing absorption are interdependent and influence each other to produce these figures. Individually, these relationships might seem counterintuitive or incomplete. However, taken together, they paint a cohesive picture. The analysis suggests that the strongest impact on housing prices occurs when both interest rates and CPI are decreased simultaneously, signaling a robust economy and leading to a decline in housing prices. Meanwhile, housing absorption has a relatively minor impact on price fluctuations, indicating that supply-demand dynamics play a less significant role compared to broader economic indicators. This interconnected understanding highlights the complexity of housing market dynamics and the importance of considering multiple factors in economic analysis.
+It is important to note that these changes do not occur in isolation. As this is a linear regression model, the effects of interest rates, CPI, and housing absorption are interdependent and influence each other to produce these figures. Individually, these relationships might seem counterintuitive or incomplete. However, taken together, they paint a cohesive picture. The analysis suggests that the strongest impact on housing prices occurs when both interest rates and CPI are decreased simultaneously, signaling a robust economy and leading to a decline in housing prices. Meanwhile, housing absorption has a relatively minor impact on price fluctuations, indicating that supply-demand dynamics play a less significant role compared to broader economic indicators. This interconnected understanding highlights the complexity of housing market dynamics and the importance of considering multiple indicators in economic analysis.
 
 \newpage
 
@@ -301,7 +323,7 @@ It is important to note that these changes do not occur in isolation. As this is
 
 ## Diverse Opinions on Housing Affordability
 
-Housing affordability has become an important issue, sparking widespread debate on how best to address the crisis. Solutions range from increasing housing supply to implementing demand-side policy measures. This paper aims to contribute to the discourse by assessing the effectiveness of these solutions using data based insights. By analyzing the relationships between key economic factors and the New Housing Price Index (NHPI), this study identifies impactful levers to improve affordability.
+Housing affordability has become an important issue, sparking widespread debate on how best to address the crisis. Solutions range from increasing housing supply to implementing demand-side policy measures. This paper aims to contribute to the discourse by assessing the effectiveness of these solutions using data based findings. By analyzing the relationships between key economic indicators and the New Housing Price Index (NHPI), this study identifies impactful levers to improve affordability.
 
 Andrew Crosby's article @crosby2024 highlights a balanced approach to tackling rising housing costs, emphasizing both supply-side measures—such as building affordable housing, protecting existing stock, and investing in public housing—and demand-side interventions, including tenant protections, rent controls, and reducing speculative real estate practices. The article calls for stricter regulations on financialized landlords, long-term affordability commitments, and collaborative efforts between governments and developers to resist gentrification and ensure housing accessibility for marginalized communities.
 
@@ -309,21 +331,21 @@ In line with these recommendations, the Canadian government recently announced a
 
 ## Housing Demand
 
-Housing demand is often cited as a major driver of prices, especially in high-demand areas with limited supply. Economic growth can also increase construction costs, which builders pass on to buyers, further inflating prices. However, the data suggest that demand is not as significant a contributor to housing prices as other economic factors.
+Housing demand is often cited as a major driver of prices, especially in high-demand areas with limited supply. Economic growth can also increase construction costs, which builders pass on to buyers, further inflating prices. However, the data suggest that demand is not as significant a contributor to housing prices as other economic indicators.
 
 Interestingly, housing absorption—the rate at which new homes are sold—shows an inverse relationship with the NHPI. For every additional house sold, the NHPI decreases by 0.0003. This finding implies that higher absorption rates often reflect increased supply, competitive pricing strategies by builders, or both. Simply put, a busy housing market can lead to lower prices due to greater availability.
 
 ## True Impact on Housing Prices
 
-The analysis reveals that inflation and interest rates exert a significantly greater influence on housing prices than demand. As highlighted by Bayan Yousef Farhan in @farhan2024 , rising Canadian house prices are strongly impacted by inflation and increasing bank interest rates, which raise mortgage costs and reduce purchasing power, thereby exacerbating affordability challenges.
+The analysis shows that inflation and interest rates exert a significantly greater influence on housing prices than demand. As highlighted by Bayan Yousef Farhan in @farhan2024 , rising Canadian house prices are strongly impacted by inflation and increasing bank interest rates, which raise mortgage costs and reduce purchasing power, thereby exacerbating affordability challenges.
 
 ## Weaknesses and Next Steps
 
-While this study provides valuable observation, it is not without limitations. A key weakness is the reliance on aggregated data, which may obscure regional disparities. For example, housing market dynamics in metropolitan areas like Toronto may differ substantially from those in smaller cities or rural regions. Future research should incorporate more granular data to capture these variations.
+While this study provides an important observation, it is not without limitations. A key weakness is the reliance on aggregated data, which may obscure regional disparities. For example, housing market dynamics in metropolitan areas like Toronto may differ substantially from those in smaller cities or rural regions. Future research should incorporate more granular data to capture these variations.
 
 ### Incorporating Additional Predictors
 
-Another limitation is the exclusion of factors such as population growth, zoning regulations, and international investment trends. Including these variables in future models would provide a more complete understanding of the drivers of affordability.
+Another limitation is the exclusion of indicators such as population growth, zoning regulations, and international investment trends. Including these variables in future models would provide a more complete understanding of the drivers of affordability.
 
 ### Addressing Policy Implications
 
@@ -331,7 +353,7 @@ The study emphasizes the importance of coordinated policy interventions. While i
 
 
 ## Conclusion
-This paper underscores the complexity of addressing housing affordability through a data based approach. By analyzing the NHPI and its key predictors, it identifies actionable criteria into the economic factors shaping housing markets. The findings highlight the roles of interest rate policies, economic growth alignment, and efficient housing production in improving affordability. Looking ahead, addressing regional disparities, incorporating additional predictors, and adopting multi-faceted strategies will be essential for developing sustainable solutions to the housing crisis. 
+This paper underscores the complexity of addressing housing affordability through a data based approach. By analyzing the NHPI and its key predictors, it identifies actionable criteria into the economic indicators shaping housing markets. The findings highlight the roles of interest rate policies, economic growth alignment, and efficient housing production in improving affordability. Looking ahead, addressing regional disparities, incorporating additional predictors, and adopting multi-faceted strategies will be essential for developing sustainable solutions to the housing crisis. 
 
 \newpage
 
@@ -372,34 +394,38 @@ The NHPI data is susceptible to several biases and errors that could affect the 
 # Load the model
 final_model <- readRDS(here::here("models/final_model.rds"))
 
-# Visualization: NHPI vs Predictor Variables for both datasets
 # Prepare observed data
 observed_long <- analysis_data %>%
-  pivot_longer(cols = c("rate", "gdp", "cpi", "construction", "absorption"), 
-               names_to = "Variable", 
-               values_to = "Value") %>%
+  pivot_longer(
+    cols = c("rate", "gdp", "cpi", "construction", "absorption"), 
+    names_to = "Variable", 
+    values_to = "Value"
+  ) %>%
   mutate(Dataset = "Observed")
 
 # Prepare simulated data
 simulated_long <- sim_data %>%
-  pivot_longer(cols = c("rate", "gdp", "cpi", "construction", "absorption"), 
-               names_to = "Variable", 
-               values_to = "Value") %>%
+  pivot_longer(
+    cols = c("rate", "gdp", "cpi", "construction", "absorption"), 
+    names_to = "Variable", 
+    values_to = "Value"
+  ) %>%
   mutate(Dataset = "Simulated")
 
 # Combine datasets
 combined_data <- bind_rows(observed_long, simulated_long)
 
-# Plot comparison
+# Plot comparison without titles, keeping only captions
 combined_data %>%
   ggplot(aes(x = Value, y = house_price, color = Dataset)) +
   geom_point(alpha = 0.5) +
   facet_wrap(~Variable, scales = "free_x") +
   theme_minimal() +
-  labs(title = "Comparison of Observed vs Simulated NHPI",
+  labs(
        x = "Predictor Value",
        y = "House Price",
-       color = "Dataset")
+       color = "Dataset"
+  )
 
 #### Model-based comparison ####
 
@@ -412,7 +438,7 @@ simulated_predictions <- sim_data %>%
 
 ```
 
-The simulation was designed to generate an idealized dataset representing potential housing market trends under different economic conditions, including broader geographic diversity and adjusted predictor distributions. Compared to the observed data, the simulated dataset shows higher variability in predictors like absorption and construction, reflecting hypothetical rural inclusion and varying economic environments. For instance, simulated values for GDP and CPI exhibit a wider range, which may capture conditions not fully represented in the observed urban-focused data. The results suggest that observed data may underrepresent variability in house prices associated with broader economic factors, potentially leading to an overestimation of price stability. These findings highlight the importance of addressing the disparities of geographic and economic coverage, with implications for more accurate housing policies and market analyses.
+In simulation was designed to generate an idealized dataset representing potential housing market trends under different economic conditions, including broader geographic diversity and adjusted predictor distributions. Compared to the observed data, the simulated dataset @fig-sim-data shows higher variability in predictors like absorption and construction, reflecting hypothetical rural inclusion and varying economic environments. For instance, simulated values for GDP and CPI exhibit a wider range, which may capture conditions not fully represented in the observed urban-focused data. The results suggest that observed data may underrepresent variability in house prices associated with broader economic indicators, potentially leading to an overestimation of price stability. These findings highlight the importance of addressing the disparities of geographic and economic coverage, with implications for more accurate housing policies and market analyses.
 
 
 ### 7. Conclusion
@@ -421,4 +447,5 @@ This Appendix emphasizes the strengths and limitations of the NHPI and related e
 
 # References{#sec-references}
 
-I would like to express my gratitude to the developers and contributors of the R programming language and the extensive ecosystem of R packages, including @tidyverse, @caret, @car, @corrplot, @arrow, @testthat, @here, @dplyr, @rsdmx, @httr, @lubridate, @readr, @ggplot2, @kableExtra, @bayesplot, @tidyr, and @knitr. These tools have been indispensable in facilitating the data analysis, visualization, and statistical modeling necessary for this study. Their capabilities have enabled a seamless workflow and enhanced the rigor of this research.
+I would thank to the developers and contributors of the R programming language and the ecosystem of R packages, including @tidyverse, @caret, @car, @corrplot, @arrow, @testthat, @here, @rsdmx, @httr, @lubridate, @readr, @ggplot2, @kableExtra,@utils and @knitr. These tools helped with the data analysis, visualization, and statistical modeling necessary for this study. Their capabilities have enabled a seamless workflow and enhanced the rigor of this research.
+\newpage 

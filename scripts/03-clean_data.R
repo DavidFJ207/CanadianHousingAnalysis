@@ -10,7 +10,6 @@
 
 
 #### Workspace setup ####
-library(tidyverse)
 library(here)
 library(dplyr)
 library(arrow)
