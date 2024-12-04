@@ -28,4 +28,4 @@ The repository is organized as follows:
 
 ## Statement on LLM Usage
 
-Aspects of this project, including code and documentation, were developed with assistance from **ChatGPT-4o**. The complete interaction history is available in `other/inputs/llms/usage.txt`, ensuring transparency in the use of AI tools during the workflow.
+Aspects of this project, including code and documentation, were developed with assistance from **ChatGPT-4o**. The complete interaction history is available in `other/inputs/llms/`, ensuring transparency in the use of AI tools during the workflow.
